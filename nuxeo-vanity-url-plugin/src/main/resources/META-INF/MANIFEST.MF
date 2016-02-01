@@ -1,0 +1,10 @@
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: nuxeo-vanity-url-plugin
+Manifest-Version: 1.0
+Bundle-Name: org.nuxeo.vanityurl
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-Vendor: Nuxeo
+Bundle-Version: 8.1-SNAPSHOT
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: org.nuxeo.labs.vanityurl 
+Nuxeo-Component: OSGI-INF/vanityurls-contrib.xml

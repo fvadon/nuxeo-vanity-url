@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+
+<component
+  name="org.nuxeo.labs.vanityurl.contrib">
+  <documentation>
+    Contributions for basic rest navigation through the application.
+
+    @version 1.0
+    @author Fred Vadon (fvadon@nuxeo.com)
+  </documentation>
+
+  <extension
+    target="org.nuxeo.ecm.platform.url.service.DocumentViewCodecService"
+    point="codecs">
+    <documentation>
+      The go codec uses a custom user defined unique id to resolve the context. Urls are of
+      the form http://site/nuxeo/go/mycustompath.
+
+    </documentation>
+    <documentViewCodec name="go" enabled="true" prefix="go"
+      class="org.nuxeo.labs.vanityurl.GoCodec"/>
+  </extension>
+  
+  <extension target="org.nuxeo.ecm.platform.ui.web.auth.service.PluggableAuthenticationService"
+    point="startURL">
+    <startURLPattern>
+      <patterns>
+        <pattern>go/</pattern>
+      </patterns>
+    </startURLPattern>
+
+  </extension>
+  
+  
+  <extension target="org.nuxeo.ecm.platform.ui.web.rest.URLService"
+  point="urlpatterns">
+    <urlPattern enabled="true" name="go">
+      <defaultURLPolicy>false</defaultURLPolicy>
+      <needBaseURL>true</needBaseURL>
+      <needRedirectFilter>true</needRedirectFilter>
+      <needFilterPreprocessing>true</needFilterPreprocessing>
+      <codecName>go</codecName>
+      <actionBinding>#{restHelper.initContextFromRestRequest}</actionBinding>
+      <documentViewBinding>#{restHelper.documentView}</documentViewBinding>
+      <newDocumentViewBinding>
+        #{restHelper.newDocumentView}
+      </newDocumentViewBinding>
+      <bindings>
+        <binding callGetter="false" name="tabId">
+          #{webActions.currentTabId}
+        </binding>
+        <binding callGetter="false" name="subTabId">
+          #{webActions.currentSubTabId}
+        </binding>
+        <binding name="tabIds">#{webActions.currentTabIds}</binding>
+        <binding callGetter="false" name="language">
+          #{restHelper.localeString}
+        </binding>
+      </bindings>
+    </urlPattern>
+
+  </extension>
+
+
+
+
+</component>
