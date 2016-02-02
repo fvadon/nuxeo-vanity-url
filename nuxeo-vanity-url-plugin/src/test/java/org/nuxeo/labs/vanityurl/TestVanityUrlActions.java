@@ -1,7 +1,7 @@
 package org.nuxeo.labs.vanityurl;
 
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -16,8 +16,11 @@ import org.nuxeo.ecm.automation.test.EmbeddedAutomationServerFeature;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.repository.RepositoryManager;
+import org.nuxeo.ecm.directory.Session;
+import org.nuxeo.ecm.directory.api.DirectoryService;
 import org.nuxeo.ecm.platform.test.PlatformFeature;
-import org.nuxeo.labs.vanityurl.VanityUrlActions;
+import org.nuxeo.labs.vanityurl.AbstractVanityUrlActions;
+import org.nuxeo.runtime.api.Framework;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
@@ -32,7 +35,7 @@ import com.google.inject.Inject;
 @Features({ PlatformFeature.class,
         EmbeddedAutomationServerFeature.class })
 @Deploy({ "org.nuxeo.labs.vanityurl" })
-public class TestVanityUrlActions extends VanityUrlActions {
+public class TestVanityUrlActions extends AbstractVanityUrlActions {
 
     @Inject
     CoreSession session;
@@ -77,9 +80,16 @@ public class TestVanityUrlActions extends VanityUrlActions {
     }
 
     @Test
+    public void vanityURLDirectoryTest() {
+        DirectoryService dirService = Framework.getLocalService(DirectoryService.class);
+        Session dirSession = dirService.open(VanityUrlConstant.VANITY_URL_DIRECTORY);
+        assertEquals(dirSession.getIdField(),VanityUrlConstant.VANITY_URL_VANITY_FIELD);
+        dirSession.close();
+    }
+
+    @Test
     public void vanityUrlActionTest() throws OperationException {
         OperationContext ctx = new OperationContext(session);
-
         ctx.setInput(docToPublish);
         OperationChain initChain = new OperationChain("testpublish");
         initChain.add(FetchContextDocument.ID);
