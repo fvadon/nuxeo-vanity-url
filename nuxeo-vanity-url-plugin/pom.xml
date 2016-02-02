@@ -5,11 +5,11 @@
   <parent>
     <groupId>org.nuxeo.labs.vanityurl</groupId>
     <artifactId>nuxeo-vanity-url-parent</artifactId>
-    <version>7.10-SNAPSHOT</version>
+    <version>8.1-SNAPSHOT</version>
   </parent>
   <groupId>org.nuxeo.labs.vanityurl</groupId>
   <artifactId>nuxeo-vanity-url-plugin</artifactId>
-  <version>7.10-SNAPSHOT</version>
+  <version>8.1-SNAPSHOT</version>
   <name>nuxeo-vanity-url-plugin</name>
   <description/>
   <dependencies>
