@@ -88,6 +88,12 @@ public class TestVanityUrlActions extends AbstractVanityUrlActions {
     }
 
     @Test
+    public void vanityUrlShoulddMeetCriteria() {
+        assertFalse("Should not be able to add empty message",vanityUrlMeetsCriteria(""));
+        assertTrue(vanityUrlMeetsCriteria("hello"));
+    }
+
+    @Test
     public void vanityUrlActionTest() throws OperationException {
         OperationContext ctx = new OperationContext(session);
         ctx.setInput(docToPublish);
@@ -96,6 +102,18 @@ public class TestVanityUrlActions extends AbstractVanityUrlActions {
         initChain.add(PublishDocument.ID).set("target", section.getId());
         publishedDoc = (DocumentModel) service.run(ctx, initChain);
         assertNotNull(publishedDoc);
+
+        String vanityPart = "gohere";
+        String docToPublishID=docToPublish.getId();
+        String publishedDocID=publishedDoc.getId();
+        assertTrue("VanityPart should not exist yet",getExistingDocIdForVanityURL(vanityPart).equals(""));
+        assertTrue("Should get -1 if the vanityPart does not meet criteria", setVanityURL(docToPublishID, "")==-1);
+        assertTrue("Should get 1 if the vanityPart was added", setVanityURL(docToPublishID, vanityPart)==1);
+        assertTrue("Vanity part should be here now",getExistingDocIdForVanityURL(vanityPart).equals(docToPublishID));
+        assertTrue("Should get -2 as trying to add the part for another ID", setVanityURL(publishedDocID, vanityPart)==-2);
+
+
+
     }
 
 
