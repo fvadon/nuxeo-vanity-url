@@ -111,6 +111,9 @@ public class TestVanityUrlActions extends AbstractVanityUrlActions {
         assertTrue("Should get 1 if the vanityPart was added", setVanityURL(docToPublishID, vanityPart)==1);
         assertTrue("Vanity part should be here now",getExistingDocIdForVanityURL(vanityPart).equals(docToPublishID));
         assertTrue("Should get -2 as trying to add the part for another ID", setVanityURL(publishedDocID, vanityPart)==-2);
+        removeVanityURL(docToPublishID);
+        assertTrue("VanityPart should not exist anymore",getExistingDocIdForVanityURL(vanityPart).equals(""));
+
 
 
 

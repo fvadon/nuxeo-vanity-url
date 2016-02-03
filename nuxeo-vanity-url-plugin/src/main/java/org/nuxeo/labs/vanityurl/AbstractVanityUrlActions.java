@@ -1,9 +1,11 @@
 package org.nuxeo.labs.vanityurl;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.nuxeo.ecm.core.api.DocumentModel;
+import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.directory.Session;
 import org.nuxeo.ecm.directory.api.DirectoryService;
 import org.nuxeo.runtime.api.Framework;
@@ -53,6 +55,21 @@ public abstract class AbstractVanityUrlActions {
      * @param documentUID
      */
     public void removeVanityURL(String documentUID) {
+        DirectoryService dirService = Framework.getLocalService(DirectoryService.class);
+        Session dirSession = dirService.open(VanityUrlConstant.VANITY_URL_DIRECTORY);
+        Map<String, Serializable> filter = new HashMap<String, Serializable>();
+        filter.put(VanityUrlConstant.VANITY_URL_DOCUMENT_FIELD,
+                documentUID);
+        try {
+            DocumentModelList list = dirSession.query(filter);
+            for (DocumentModel entry : list) {
+                dirSession.deleteEntry(entry);
+            }
+        } finally {
+            dirSession.close();
+        }
+
+
 
     }
 
