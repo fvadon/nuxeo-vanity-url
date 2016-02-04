@@ -19,91 +19,64 @@
 
 package org.nuxeo.labs.vanityurl;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import static org.junit.Assert.*;
 
 import org.nuxeo.ecm.core.api.DocumentLocation;
 import org.nuxeo.ecm.core.api.IdRef;
 import org.nuxeo.ecm.core.api.impl.DocumentLocationImpl;
+import org.nuxeo.ecm.platform.test.PlatformFeature;
 import org.nuxeo.ecm.platform.url.DocumentViewImpl;
 import org.nuxeo.ecm.platform.url.api.DocumentView;
 import org.nuxeo.labs.vanityurl.GoCodec;
+import org.nuxeo.runtime.test.runner.Deploy;
+import org.nuxeo.runtime.test.runner.Features;
+import org.nuxeo.runtime.test.runner.FeaturesRunner;
 
 /**
  * @author <a href="mailto:fvadon@nuxeo.com">Fred Vadon</a>
  */
+@RunWith(FeaturesRunner.class)
+@Features({ PlatformFeature.class})
+@Deploy({"org.nuxeo.labs.vanityurl"})
 public class TestGoCodec {
+
+    private String vanityPart = "go-here";
+    private String docId="dbefd5a0-35ee-4ed2-a023-6817714f32cf";
+    private String url = "go/go-here";
 
     @Test
     public void testGetUrlFromDocumentView() {
         GoCodec codec = new GoCodec();
-        DocumentLocation docLoc = new DocumentLocationImpl("demo", new IdRef("dbefd5a0-35ee-4ed2-a023-6817714f32cf"));
-        Map<String, String> params = new HashMap<String, String>();
-        params.put("tabId", "TAB_CONTENT");
-        DocumentView docView = new DocumentViewImpl(docLoc, "view_documents", params);
+        DocumentLocation docLoc = new DocumentLocationImpl("demo", new IdRef(docId));
 
-        String url = "go/demo/dbefd5a0-35ee-4ed2-a023-6817714f32cf/view_documents?tabId=TAB_CONTENT";
+        assertTrue("Should get 1 if the vanityPart was added", VanityUrlActionHelper.setVanityURL(docId,vanityPart)==1);
+        DocumentView docView = new DocumentViewImpl(docLoc, "view_documents");
+
         assertEquals(url, codec.getUrlFromDocumentView(docView));
+        VanityUrlActionHelper.removeVanityURL(docId);
+
     }
 
     @Test
     public void testGetDocumentViewFromUrl() {
         GoCodec codec = new GoCodec();
-        String url = "go/demo/dbefd5a0-35ee-4ed2-a023-6817714f32cf/view_documents?tabId=TAB_CONTENT";
+        //String url = "go/demo/dbefd5a0-35ee-4ed2-a023-6817714f32cf/view_documents?tabId=TAB_CONTENT";
+
+
+        assertTrue("Should get 1 if the vanityPart was added", VanityUrlActionHelper.setVanityURL(docId,vanityPart)==1);
+
         DocumentView docView = codec.getDocumentViewFromUrl(url);
 
         DocumentLocation docLoc = docView.getDocumentLocation();
-        assertEquals("demo", docLoc.getServerName());
-        assertEquals(new IdRef("dbefd5a0-35ee-4ed2-a023-6817714f32cf"), docLoc.getDocRef());
+        assertEquals("default", docLoc.getServerName());
+        assertEquals(new IdRef(docId), docLoc.getDocRef());
         assertEquals("view_documents", docView.getViewId());
         assertNull(docView.getSubURI());
 
-        Map<String, String> params = docView.getParameters();
-        assertEquals("TAB_CONTENT", params.get("tabId"));
-    }
-
-    // do the same without view id (optional)
-    @Test
-    public void testGetDocumentViewFromUrlNoViewId() {
-        GoCodec codec = new GoCodec();
-        String url = "go/demo/dbefd5a0-35ee-4ed2-a023-6817714f32cf?tabId=TAB_CONTENT";
-        DocumentView docView = codec.getDocumentViewFromUrl(url);
-
-        DocumentLocation docLoc = docView.getDocumentLocation();
-        assertEquals("demo", docLoc.getServerName());
-        assertEquals(new IdRef("dbefd5a0-35ee-4ed2-a023-6817714f32cf"), docLoc.getDocRef());
-        assertNull(docView.getViewId());
-        assertNull(docView.getSubURI());
-
-        Map<String, String> params = docView.getParameters();
-        assertEquals("TAB_CONTENT", params.get("tabId"));
-    }
-
-    // test urls wit a sub uri do not match
-    @Test
-    public void testGetDocumentViewFromUrlWithSubUri() {
-        GoCodec codec = new GoCodec();
-        String url = "go/demo/dbefd5a0-35ee-4ed2-a023-6817714f32cf/view_documents/whatever?tabId=TAB_CONTENT";
-        DocumentView docView = codec.getDocumentViewFromUrl(url);
-        assertNull(docView);
-    }
-
-    @Test
-    public void testGetDocumentViewFromUrlWithJSessionId() {
-        GoCodec codec = new GoCodec();
-        String url = "go/demo/dbefd5a0-35ee-4ed2-a023-6817714f32cf/view_documents;jsessionid=7CD6F2222BB08134A57BD2098DA16B2C.nuxeo?tabId=TAB_CONTENT";
-        DocumentView docView = codec.getDocumentViewFromUrl(url);
-        assertNotNull(docView);
-
-        DocumentLocation docLoc = docView.getDocumentLocation();
-        assertEquals("demo", docLoc.getServerName());
-        assertEquals("view_documents", docView.getViewId());
-        Map<String, String> params = docView.getParameters();
-        assertEquals("TAB_CONTENT", params.get("tabId"));
+        VanityUrlActionHelper.removeVanityURL(docId);
     }
 
 }

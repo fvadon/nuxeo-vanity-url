@@ -19,14 +19,9 @@
 
 package org.nuxeo.labs.vanityurl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.nuxeo.common.utils.StringUtils;
-import org.nuxeo.common.utils.URIUtils;
 import org.nuxeo.ecm.core.api.DocumentLocation;
 import org.nuxeo.ecm.core.api.DocumentRef;
 import org.nuxeo.ecm.core.api.IdRef;
@@ -44,8 +39,13 @@ public class GoCodec extends AbstractDocumentViewCodec {
 
     public static final String PREFIX = "go";
 
+    private static final String VIEW_ID = "view_documents";
+
+    private static final String DEFAULT_SERVER = "default";
+
     // nxdoc/server/docId/view_id/?requestParams
-    public static final String URLPattern = "/(\\w+)/([a-zA-Z_0-9\\-]+)(/([a-zA-Z_0-9\\-\\.;=]*))?(/)?(\\?(.*)?)?";
+    // public static final String URLPattern = "/(\\w+)/([a-zA-Z_0-9\\-]+)(/([a-zA-Z_0-9\\-\\.;=]*))?(/)?(\\?(.*)?)?";
+    public static final String URLPattern = "/([a-zA-Z_0-9\\-]+)";
 
     public GoCodec() {
     }
@@ -65,22 +65,18 @@ public class GoCodec extends AbstractDocumentViewCodec {
     public String getUrlFromDocumentView(DocumentView docView) {
         DocumentLocation docLoc = docView.getDocumentLocation();
         if (docLoc != null) {
-            List<String> items = new ArrayList<String>();
-            items.add(getPrefix());
-            items.add(docLoc.getServerName());
             IdRef docRef = docLoc.getIdRef();
             if (docRef == null) {
                 return null;
             }
-            items.add(docRef.toString());
-            String viewId = docView.getViewId();
-            if (viewId != null) {
-                items.add(viewId);
+            String vanityPart = VanityUrlActionHelper.getVanityURLForDocumentID(docRef.toString());
+            if(vanityPart.length()>0){
+                String uri = getPrefix()+"/"+vanityPart;
+                return uri;
             }
-            String uri = StringUtils.join(items, "/");
-            return URIUtils.addParametersToURIQuery(uri, docView.getParameters());
         }
         return null;
+
     }
 
     /**
@@ -91,35 +87,26 @@ public class GoCodec extends AbstractDocumentViewCodec {
         final Pattern pattern = Pattern.compile(getPrefix() + URLPattern);
         Matcher m = pattern.matcher(url);
         if (m.matches()) {
-            if (m.groupCount() >= 4) {
+            if (m.groupCount() == 1) {
 
                 // for debug
                 // for (int i = 1; i < m.groupCount() + 1; i++) {
                 // System.err.println(i + ": " + m.group(i));
                 // }
 
-                final String server = m.group(1);
-                String uuid = m.group(2);
-                final DocumentRef docRef = new IdRef(uuid);
-                String viewId = m.group(4);
-                if (viewId != null) {
-                    int jsessionidIndex = viewId.indexOf(";jsessionid");
-                    if (jsessionidIndex != -1) {
-                        viewId = viewId.substring(0, jsessionidIndex);
-                    }
+                // Hardcoding the serveur id
+                // final String server = m.group(1);
+                final String server = DEFAULT_SERVER;
+                String vanityPart = m.group(1);
+                String uuid = VanityUrlActionHelper.getExistingDocIdForVanityURL(vanityPart);
+                if (uuid.length() > 0) {
+                    final DocumentRef docRef = new IdRef(uuid);
+                    String viewId = VIEW_ID;
+
+                    final DocumentLocation docLoc = new DocumentLocationImpl(server, docRef);
+
+                    return new DocumentViewImpl(docLoc, viewId);
                 }
-
-                // get other parameters
-
-                Map<String, String> params = null;
-                if (m.groupCount() > 6) {
-                    String query = m.group(7);
-                    params = URIUtils.getRequestParameters(query);
-                }
-
-                final DocumentLocation docLoc = new DocumentLocationImpl(server, docRef);
-
-                return new DocumentViewImpl(docLoc, viewId, params);
             }
         }
 

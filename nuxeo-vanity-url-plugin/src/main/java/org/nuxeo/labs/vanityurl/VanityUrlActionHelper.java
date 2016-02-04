@@ -10,17 +10,17 @@ import org.nuxeo.ecm.directory.Session;
 import org.nuxeo.ecm.directory.api.DirectoryService;
 import org.nuxeo.runtime.api.Framework;
 
-public abstract class AbstractVanityUrlActions {
+public class VanityUrlActionHelper {
 
     /**
-     * Store the VanityPart for the given documentUID, vanityPart must be unique. A document only has one vanityURL
+     * Stores the VanityPart for the given documentUID, vanityPart must be unique. A document only has one vanityURL
      *
      * @param documentUID
      * @param vanityPart
      * @return 1 is the vanityURL was added, -1 if the vanityPart wasn't added because does not meet criteria -2 if the
      *         vanityURL already exists for another document,
      */
-    public Integer setVanityURL(String documentUID, String vanityPart) {
+    public static Integer setVanityURL(String documentUID, String vanityPart) {
         if (!vanityUrlMeetsCriteria(vanityPart)) {
             return -1;
         }
@@ -32,6 +32,9 @@ public abstract class AbstractVanityUrlActions {
             // another Doc is associated
             return -2;
         }
+
+        // A document can have only one vanityURl, removing any previous value.
+        removeVanityURL(documentUID);
 
         Map<String, Object> map = new HashMap<String, Object>();
 
@@ -50,11 +53,11 @@ public abstract class AbstractVanityUrlActions {
     }
 
     /**
-     * Remove the VanityURL for the given documentUID
+     * Removes the VanityURL for the given documentUID
      *
      * @param documentUID
      */
-    public void removeVanityURL(String documentUID) {
+    public static void removeVanityURL(String documentUID) {
         DirectoryService dirService = Framework.getLocalService(DirectoryService.class);
         Session dirSession = dirService.open(VanityUrlConstant.VANITY_URL_DIRECTORY);
         Map<String, Serializable> filter = new HashMap<String, Serializable>();
@@ -74,13 +77,12 @@ public abstract class AbstractVanityUrlActions {
     }
 
     /**
-     * Check if the vanityPart already exists and get the associated documentID.
+     * Checks if the vanityPart already exists and gets the associated documentID.
      *
-     * @param documentUID
      * @param vanityPart
      * @return String of the associated documentUID if exists, empty String if does not exists.
      */
-    public String getExistingDocIdForVanityURL(String vanityPart) {
+    public static String getExistingDocIdForVanityURL(String vanityPart) {
         DirectoryService dirService = Framework.getLocalService(DirectoryService.class);
         Session dirSession = dirService.open(VanityUrlConstant.VANITY_URL_DIRECTORY);
         try {
@@ -95,12 +97,39 @@ public abstract class AbstractVanityUrlActions {
     }
 
     /**
-     * Check if the vanityPart can be used as a url part, only checks it's not empty for now
+     * Checks if there is a Vanity part for a document ID and sends it back, empty String is there is no value.
+     *
+     * @param documentUID
+     * @param vanityPart
+     * @return String of the associated VanityURL if exists, empty String if does not exists.
+     */
+    public static String getVanityURLForDocumentID(String documentUID) {
+        DirectoryService dirService = Framework.getLocalService(DirectoryService.class);
+        Session dirSession = dirService.open(VanityUrlConstant.VANITY_URL_DIRECTORY);
+        Map<String, Serializable> filter = new HashMap<String, Serializable>();
+        filter.put(VanityUrlConstant.VANITY_URL_DOCUMENT_FIELD,
+                documentUID);
+        try {
+            DocumentModelList list = dirSession.query(filter);
+            if(list.size()>0) {
+                // there should only one item max anyway
+                return (String) list.get(0).getPropertyValue(VanityUrlConstant.VANITY_URL_VANITY_FIELD);
+            } else {
+                return "";
+            }
+
+        } finally {
+            dirSession.close();
+        }
+    }
+
+    /**
+     * Checks if the vanityPart can be used as a url part, only checks it's not empty for now
      *
      * @param vanityPart
      * @return
      */
-    public Boolean vanityUrlMeetsCriteria(String vanityPart) {
+    public static Boolean vanityUrlMeetsCriteria(String vanityPart) {
 
         if (vanityPart.length() == 0) {
             return false;
